@@ -9,12 +9,12 @@ myWHITE="[0;0m"
 myBLUE="[0;34m"
 
 myUPDATER=$(cat << "EOF"
- _____     ____       _     _   _           _       _
-|_   _|   |  _ \ ___ | |_  | | | |_ __   __| | __ _| |_ ___ _ __
-  | |_____| |_) / _ \| __| | | | | '_ \ / _` |/ _` | __/ _ \ '__|
-  | |_____|  __/ (_) | |_  | |_| | |_) | (_| | (_| | ||  __/ |
-  |_|     |_|   \___/ \__|  \___/| .__/ \__,_|\__,_|\__\___|_|
-                                 |_|
+   ______      __              ____        __ 
+  / ____/_  __/ /_  ___  _____/ __ \____  / /_
+ / /   / / / / __ \/ _ \/ ___/ /_/ / __ \/ __/
+/ /___/ /_/ / /_/ /  __/ /  / ____/ /_/ / /_  
+\____/\__, /_.___/\___/_/  /_/    \____/\__/  
+     /____/                                   
 EOF
 )
 
@@ -104,7 +104,15 @@ function fuSTOP_CYPERPOT () {
 	echo
 	echo "### Need to stop CyberPot ..."
 	echo -n "###### $myBLUE Now stopping CyberPot.$myWHITE "
-	sudo systemctl stop cyberpot.service
+	if pidof systemd > /dev/null; then
+		sudo systemctl stop cyberpot.service
+	else
+		if [ -f /etc/init.d/cyberpot ]; then
+			sudo /etc/init.d/cyberpot stop
+		else
+			docker-compose down
+		fi
+	fi
 	if [ $? -ne 0 ];
 	  then
 	    echo " [ $myRED""NOT OK""$myWHITE ]"
@@ -122,8 +130,7 @@ function fuSTOP_CYPERPOT () {
 	    fi
 	    echo "[ $myGREEN"OK"$myWHITE ]"
 	fi
-	echo
-}
+	echo}
 
 # Backup
 function fuBACKUP () {

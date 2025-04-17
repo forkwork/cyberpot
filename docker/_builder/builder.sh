@@ -18,7 +18,7 @@ PUSH_IMAGES=false
 NO_CACHE=false
 PARALLELBUILDS=2
 UPLOAD_BANDWIDTH=40mbit # Set this to max 90% of available upload bandwidth
-INTERFACE=$(/sbin/ip address show | /usr/bin/awk '/inet.*brd/{ print $NF; exit }')
+INTERFACE=$(ip route | grep "^default" | awk '{ print $5 }')
 
 # Help message
 usage() {
@@ -90,7 +90,7 @@ remove_bandwidth_limit() {
 }
 
 echo "###########################"
-echo "# CyberPot Image Builder"
+echo "# CybrPot Image Builder"
 echo "###########################"
 echo
 
@@ -177,7 +177,7 @@ echo $services | tr ' ' '\n' | xargs -I {} -P $PARALLELBUILDS bash -c '
     if '$NO_CACHE'; then \
         build_cmd="$build_cmd --no-cache"; \
     fi && \
-    eval "$build_cmd > log/{}.log 2>&1" && \
+    eval "$build_cmd 2>&1 > log/{}.log" && \
     echo -e "Image {}: ['$GREEN'OK'$NC']" || \
     echo -e "Image {}: ['$RED'FAIL'$NC']"
 '

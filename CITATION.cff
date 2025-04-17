@@ -9,13 +9,13 @@ message: >-
 type: software
 authors:
   - name: KhulnaSoft DevSecOps
-    address: Bonner Talweg 100
-    city: Bonn
-    country: DE
-    post-code: '53113'
+    address: Dhaka, 1209
+    city: Dhaka
+    country: BD
+    post-code: '161202520'
     website: 'https://github.com/khulnasoft'
-  - given-names: Marco
-    family-names: Ochse
+  - given-names: Md
+    family-names: Sulaiman
     affiliation: KhulnaSoft DevSecOps
 identifiers:
   - type: url
@@ -40,4 +40,4 @@ keywords:
 license: GPL-3.0
 commit: release
 version: 24.04.1
-date-released: '2024-12-11'
+date-released: '2025-04-18'

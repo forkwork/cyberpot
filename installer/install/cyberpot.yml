@@ -107,39 +107,12 @@
   become: true
 
   tasks:
-    - name: Syncing clocks (All)
-      shell: "hwclock --hctosys"
-      when: ansible_distribution in ["AlmaLinux", "Debian", "Fedora", "openSUSE Tumbleweed", "Raspbian", "Rocky", "Ubuntu"]
+    - name: Sync system clock from hardware clock (if available)
+      ansible.builtin.command: hwclock --hctosys
+      when: 
+        - ansible_virtualization_type not in ["docker", "lxc", "wsl", "podman"]
+        - ansible_system_vendor not in ["Microsoft Corporation", "Gitpod"]
       ignore_errors: true
-      tags:
-        - "AlmaLinux"
-        - "Debian"
-        - "Fedora"
-        - "openSUSE Tumbleweed"
-        - "Raspbian"
-        - "Rocky"
-        - "Ubuntu"
-
-    - name: Install recommended packages (Debian, Raspbian, Ubuntu)
-      package:
-        name:
-          - apache2-utils
-          - bash-completion
-          - ca-certificates
-          - cracklib-runtime
-          - cron
-          - curl
-          - git
-          - gnupg
-          - grc
-          - htop
-          - micro
-          - net-tools
-          - vim
-          - wget
-        state: latest
-        update_cache: yes
-      when: ansible_distribution in ["Debian", "Raspbian", "Ubuntu"]
       tags:
         - "Debian"
         - "Raspbian"
@@ -460,13 +433,13 @@
         - "Raspbian"
         - "Rocky"
         - "Ubuntu"
-
     - name: Disable ssh.socket unit (Ubuntu)
       systemd:
         name: ssh.socket
         state: stopped
         enabled: false
-      when: ansible_distribution in ["Ubuntu"]
+      when:
+      - ansible_service_mgr == "systemd"
       tags:
         - "Ubuntu"
 
@@ -720,8 +693,8 @@
 
     - name: Clone / Update CyberPot repository (All)
       git:
-        repo: 'https://github.com/khulnasoft/cyberpot'
-        dest: '/home/{{ ansible_user_id }}/cyberpot/'
+        repo: 'https://github.com/telekom-security/cyberpotce'
+        dest: '/home/{{ ansible_user_id }}/cyberpotce/'
         version: master
         clone: yes
         update: no
@@ -758,7 +731,7 @@
     - name: Install systemd service (All)
       become: true
       ansible.builtin.template:
-        src: '/home/{{ ansible_user_id }}/cyberpot/installer/install/cyberpot.service'
+        src: '/home/{{ ansible_user_id }}/cyberpotce/installer/install/cyberpot.service'
         dest: '/etc/systemd/system/cyberpot.service'
         owner: root
         group: root
@@ -794,12 +767,16 @@
     random_hour: "{{ range(0, 5) | random }}" # We want the reboot randomly happen at night
 
   tasks:
-    - name: Setup a randomized daily reboot (All)
-      cron:
-        name: "CyberPot Daily Reboot"
-        user: root
-        minute: "{{ random_minute }}"
-        hour: "{{ random_hour }}"
-        job: "bash -c 'systemctl stop cyberpot.service && docker container prune -f; docker image prune -f; docker volume prune -f; /usr/sbin/shutdown -r +1 \"CyberPot Daily Reboot\"'"
-        state: present
+    - name: Check if SSH config file exists
+      stat:
+        path: /etc/ssh/sshd_config
+      register: sshd_config_file
       when: ansible_distribution in ["AlmaLinux", "Debian", "Fedora", "openSUSE Tumbleweed", "Raspbian", "Rocky", "Ubuntu"]
+      tags:
+        - "AlmaLinux"
+        - "Debian"
+        - "Fedora"
+        - "openSUSE Tumbleweed"
+        - "Raspbian"
+        - "Rocky"
+        - "Ubuntu"

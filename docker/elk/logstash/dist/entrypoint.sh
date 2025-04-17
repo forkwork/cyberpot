@@ -68,8 +68,8 @@ if [ "$CYBERPOT_TYPE" != "SENSOR" ];
     echo
 
     # Index Management is happening through ILM, but we need to put CyberPot ILM setting on ES.
-    myCYPERPOTILM=$(curl -s -XGET "http://elasticsearch:9200/_ilm/policy/cyberpot" | grep "Lifecycle policy not found: cyberpot" -c)
-    if [ "$myCYPERPOTILM" == "1" ];
+    myCYBERPOTILM=$(curl -s -XGET "http://elasticsearch:9200/_ilm/policy/cyberpot" | grep "Lifecycle policy not found: cyberpot" -c)
+    if [ "$myCYBERPOTILM" == "1" ];
       then
         echo "CyberPot ILM template not found on ES, putting it on ES now."
         curl -XPUT "http://elasticsearch:9200/_ilm/policy/cyberpot" -H 'Content-Type: application/json' -d'

@@ -14,7 +14,7 @@ services:
      - "127.0.0.1:64305:64305"
     image: "ghcr.io/khulnasoft/logstash:24.04.1"
     volumes:
-     - $HOME/cyberpot/data:/data
-#     - /$HOME/cyberpot/docker/elk/logstash/dist/logstash.conf:/etc/logstash/conf.d/logstash.conf
-#     - /$HOME/cyberpot/docker/elk/logstash/dist/http.conf:/etc/logstash/conf.d/http.conf
-#     - /$HOME/cyberpot/docker/elk/logstash/dist/logstash.yml:/etc/logstash/conf.d/logstash.yml
+     - $HOME/cyberpotce/data:/data
+#     - /$HOME/cyberpotce/docker/elk/logstash/dist/logstash.conf:/etc/logstash/conf.d/logstash.conf
+#     - /$HOME/cyberpotce/docker/elk/logstash/dist/http.conf:/etc/logstash/conf.d/http.conf
+#     - /$HOME/cyberpotce/docker/elk/logstash/dist/logstash.yml:/etc/logstash/conf.d/logstash.yml
