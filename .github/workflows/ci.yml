@@ -94,10 +94,11 @@ jobs:
           find . -type f -name "*.sh" -exec chmod +x {} \;
           find . -type f -name "*.py" -exec chmod +x {} \;
           
-      - name: Run hadolint
-        uses: hadolint/hadolint-action@v3
-        with:
-          dockerfile: '**/Dockerfile'
+      - name: Run Hadolint
+        run: |
+          wget -O hadolint https://github.com/hadolint/hadolint/releases/latest/download/hadolint-Linux-x86_64
+          chmod +x hadolint
+          ./hadolint **/Dockerfile
 
   dependency-updates:
     runs-on: ubuntu-latest
@@ -117,10 +118,17 @@ jobs:
             docker-compose build --pull
           fi
           
-      - name: Run Dependabot
-        uses: dependabot/dependabot-core@v3
+      - name: Check Python dependencies
+        uses: snyk/actions/python@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
-          package-manager: 'pip'
-          update-schedule: 'weekly'
-          target-branch: 'main'
-          labels: 'dependencies' 
+          args: --severity-threshold=high
+          
+      - name: Check Docker dependencies
+        uses: snyk/actions/docker@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=high
+          image: 'docker-compose.yml' 
