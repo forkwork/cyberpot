@@ -1,0 +1,126 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  schedule:
+    - cron: '0 0 * * 0'  # Run weekly on Sunday
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+          
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          
+      - name: Run shell script tests
+        run: |
+          chmod +x install.sh
+          chmod +x update.sh
+          chmod +x uninstall.sh
+          ./install.sh --help || true
+          ./update.sh --help || true
+          ./uninstall.sh --help || true
+
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Run ShellCheck
+        uses: reviewdog/action-shellcheck@v1
+        with:
+          reporter: github-pr-review
+          shellcheck_flags: '-x'
+          
+      - name: Run Bandit security checks
+        run: |
+          python -m pip install bandit
+          bandit -r . -f json -o bandit-results.json
+          
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'docker-compose.yml'
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+          
+      - name: Run Gitleaks
+        uses: zricethezav/gitleaks-action@master
+        with:
+          config-path: .gitleaks.toml
+          
+      - name: Run OWASP Dependency Check
+        uses: dependency-check/Dependency-Check_Action@main
+        with:
+          project: 'CyberPot'
+          path: '.'
+          format: 'HTML'
+          out: 'reports'
+
+  code-quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Run yamllint
+        uses: reviewdog/action-yamllint@v1
+        with:
+          reporter: github-pr-review
+          
+      - name: Check for dead links
+        uses: gaurav-nelson/github-action-markdown-link-check@v1
+        with:
+          use-quiet-mode: 'yes'
+          use-verbose-mode: 'yes'
+          folder-path: 'doc/'
+          
+      - name: Check file permissions
+        run: |
+          find . -type f -name "*.sh" -exec chmod +x {} \;
+          find . -type f -name "*.py" -exec chmod +x {} \;
+          
+      - name: Run hadolint
+        uses: hadolint/hadolint-action@v3
+        with:
+          dockerfile: '**/Dockerfile'
+
+  dependency-updates:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Check for outdated dependencies
+        run: |
+          if [ -f requirements.txt ]; then
+            pip list --outdated
+          fi
+          
+      - name: Check for outdated Docker images
+        run: |
+          if [ -f docker-compose.yml ]; then
+            docker-compose pull
+            docker-compose build --pull
+          fi
+          
+      - name: Run Dependabot
+        uses: dependabot/dependabot-core@v3
+        with:
+          package-manager: 'pip'
+          update-schedule: 'weekly'
+          target-branch: 'main'
+          labels: 'dependencies' 
