@@ -98,7 +98,7 @@ jobs:
         run: |
           wget -O hadolint https://github.com/hadolint/hadolint/releases/latest/download/hadolint-Linux-x86_64
           chmod +x hadolint
-          ./hadolint **/Dockerfile
+          find docker -name "Dockerfile" -exec ./hadolint {} \;
 
   dependency-updates:
     runs-on: ubuntu-latest
